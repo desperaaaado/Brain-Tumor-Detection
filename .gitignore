@@ -1,0 +1,12 @@
+/.idea
+/brain-tumor-sample.jpg
+/brain-tumor.yaml
+/bus.jpg
+/datasets
+/model
+/runs
+/uploads
+/yolo11m.pt
+/yolo11n.pt
+/yolo11x.pt
+/yolov8n.pt
