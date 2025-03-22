@@ -12,7 +12,11 @@ const translations = {
         confidence: "Confidence Threshold",
         iou: "IOU Threshold",
         invalid_params: "Invalid parameter values (must be 0-1)",
-        invalid_parameter_type: "Invalid parameter format"
+        invalid_parameter_type: "Invalid parameter format",
+        home: "Home",
+        history: "History",
+        changelog: "Changelog",
+        contact: "Contact Us"
         // 其他文本...
     },
     zh: {
@@ -28,7 +32,11 @@ const translations = {
         confidence: "置信度阈值",
         iou: "交并比阈值",
         invalid_params: "参数值无效（必须为0-1）",
-        invalid_parameter_type: "参数格式错误"
+        invalid_parameter_type: "参数格式错误",
+        home: "首页",
+        history: "历史记录",
+        changelog: "更新日志",
+        contact: "联系我们"
         // 其他文本...
     }
 };

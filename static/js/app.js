@@ -68,6 +68,102 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+
+// ------------------
+// 侧边栏功能
+// ------------------
+const menuToggle = document.querySelector('.menu-toggle');
+const sidebar = document.querySelector('.sidebar');
+const mainContent = document.querySelector('.main-content');
+
+// 切换侧边栏
+function toggleSidebar() {
+    sidebar.classList.toggle('active');
+    menuToggle.classList.toggle('active');
+}
+
+// 菜单按钮点击事件
+menuToggle.addEventListener('click', toggleSidebar);
+
+// 点击外部关闭侧边栏
+document.addEventListener('click', (e) => {
+    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+        sidebar.classList.remove('active');
+        menuToggle.classList.remove('active');
+    }
+});
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 侧边栏菜单点击处理
+    document.querySelectorAll('.sidebar-menu a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = this.getAttribute('href');
+
+            // 更新URL hash
+            window.location.hash = target;
+
+            // 手动触发路由处理
+            handleRouting();
+        });
+    });
+
+    // 初始化路由
+    handleRouting();
+
+    // 监听浏览器前进/后退
+    window.addEventListener('hashchange', handleRouting);
+});
+
+// 路由处理
+function handleRouting() {
+    const hash = window.location.hash || '#home';
+
+    // 强制滚动到页面顶部
+    window.scrollTo(0, 0);
+
+    // 隐藏所有页面
+    document.querySelectorAll('.page').forEach(page => {
+        page.style.display = 'none';
+    });
+
+    // 显示当前页面
+    const currentPage = document.querySelector(hash);
+    if (currentPage) {
+        currentPage.style.display = 'block';
+
+        // 添加双重滚动保障
+        requestAnimationFrame(() => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'instant' // 强制立即滚动
+            });
+            currentPage.scrollTop = 0;
+        });
+    }
+
+    // 更新菜单激活状态
+    document.querySelectorAll('.sidebar-menu a').forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === hash) {
+            link.classList.add('active');
+        }
+    });
+
+    // 移动端自动关闭侧边栏
+    if (window.innerWidth <= 768) {
+        sidebar.classList.remove('active');
+        menuToggle.classList.remove('active');
+    }
+}
+
+
+// 初始化路由
+window.addEventListener('load', handleRouting);
+window.addEventListener('hashchange', handleRouting);
+
+
 // ------------------
 // 文件上传功能
 // ------------------

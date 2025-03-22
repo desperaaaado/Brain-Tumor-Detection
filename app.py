@@ -88,6 +88,13 @@ def predict():
                 pred_results = model.predict(upload_path,
                                              conf=conf,
                                              iou=iou)
+                boxes = pred_results[0].boxes
+                print('boxes:', boxes)
+                for box in boxes:
+                    print('xyxy:', box.xyxy.tolist()[0])
+                    print('conf:', box.conf.tolist()[0])
+                    print('class:', box.cls.tolist()[0])
+
             except ValueError:
                 return jsonify({"error": "invalid_parameter_type"}), 400
 
@@ -121,5 +128,5 @@ def serve_result(filename):
 
 if __name__ == '__main__':
     app.run(debug=True)
-    # TODO 多语言支持
+    # TODO 将检测结果的详细数据(xyxy,class,class_id,confidence,etc)导出为csv等
     # TODO 历史记录、按类别筛选功能

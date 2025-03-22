@@ -1,0 +1,104 @@
+/* 侧边栏样式 */
+.sidebar {
+    position: fixed;
+    left: -250px;
+    top: 0;
+    width: 250px;
+    height: 100%;
+    background: var(--card-bg);
+    border-right: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    z-index: 1000;
+
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.active {
+    left: 0;
+}
+
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin-top: 80px;
+}
+
+.sidebar-menu li {
+    width: 100%;
+}
+
+.sidebar-menu a {
+    display: block;
+    padding: 15px 20px;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.sidebar-menu a:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* 汉堡菜单按钮 */
+.menu-toggle {
+    position: fixed;
+    left: 30px;
+    top: 30px;
+    z-index: 1100;
+    cursor: pointer;
+
+    padding: 15px 5px; /* 增加点击区域 */
+    margin: -15px; /* 补偿padding带来的偏移 */
+}
+
+.hamburger {
+    width: 25px;
+    height: 3px;
+    background: var(--text-color);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.hamburger::before,
+.hamburger::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: inherit;
+    transition: all 0.3s ease;
+}
+
+.hamburger::before {
+    top: -8px;
+}
+
+.hamburger::after {
+    top: 8px;
+}
+
+/* 当侧边栏激活时 */
+.sidebar.active + .main-content {
+    margin-left: 250px;
+}
+
+/* 页面内容过渡效果 */
+.main-content {
+    margin-left: 0;
+    transition: margin-left 0.3s ease;
+    min-height: 100vh;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        left: -100%;
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+}
