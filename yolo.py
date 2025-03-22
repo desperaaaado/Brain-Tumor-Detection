@@ -6,7 +6,7 @@ import os
 
 if __name__ == '__main__':
     ultralytics.checks()
-    model = YOLO('yolo11m.pt')  # load a pretrained detection model
+    model = YOLO('yolo11l.pt')  # load a pretrained detection model
     # Train the model
     results = model.train(data="archive.yaml", epochs=100, imgsz=640, patience=30, lr0=1e-4,
                           box=6.0, cls=1.0, dfl=1.8)
