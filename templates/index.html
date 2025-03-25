@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="flask-base-url" content="{{ url_for('index') }}">
     <!--    <title>Brain Tumor Detection</title>-->
     <title data-i18n="title">Brain Tumor Detection</title>
 
@@ -25,6 +26,7 @@
         <li><a href="#history" data-i18n="history">History</a></li>
         <li><a href="#changelog" data-i18n="changelog">Changelog</a></li>
         <li><a href="#contact" data-i18n="contact">Contact</a></li>
+        <div id="auth-links"></div>
     </ul>
 </nav>
 

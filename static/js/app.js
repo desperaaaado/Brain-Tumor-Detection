@@ -35,6 +35,12 @@ setTheme(currentTheme);
 // ------------------
 import {setLanguage, t} from './i18n.js';
 
+document.addEventListener('languageChanged', () => {
+    if (latestResults) {
+        renderResults(latestResults);
+    }
+});
+
 
 document.addEventListener('DOMContentLoaded', () => {
     // 初始化语言和图标
@@ -118,7 +124,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 路由处理
 function handleRouting() {
-    const hash = window.location.hash || '#home';
+    // const hash = window.location.hash || '#home';
+    // 获取当前哈希，如果不存在则默认为#home
+    let hash = window.location.hash;
+
+    if (!hash || hash === '#login') {
+        hash = '#home';  // 修正错误哈希
+        history.replaceState(null, null, hash);
+    }
+
 
     // 强制滚动到页面顶部
     window.scrollTo(0, 0);
@@ -162,6 +176,28 @@ function handleRouting() {
 // 初始化路由
 window.addEventListener('load', handleRouting);
 window.addEventListener('hashchange', handleRouting);
+
+
+// 添加认证状态检查函数
+function isAuthenticated() {
+    // 这里需要与后端session/cookie配合
+    return document.cookie.includes('session='); // 根据实际认证方式调整
+}
+
+// 修改侧边栏显示登录状态
+function updateAuthUI() {
+    const authLinks = document.getElementById('auth-links');
+    if (isAuthenticated()) {
+        authLinks.innerHTML = `
+            <li><a href="#logout" data-i18n="logout">Logout</a></li>
+        `;
+    } else {
+        authLinks.innerHTML = `
+            <li><a href="#login" data-i18n="login">Login</a></li>
+            <li><a href="#register" data-i18n="register">Register</a></li>
+        `;
+    }
+}
 
 
 // ------------------

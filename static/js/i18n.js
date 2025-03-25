@@ -16,7 +16,16 @@ const translations = {
         home: "Home",
         history: "History",
         changelog: "Changelog",
-        contact: "Contact Us"
+        contact: "Contact Us",
+        login_title: "Login",
+        register_title: "Register",
+        username: "Username",
+        password: "Password",
+        email: "Email",
+        have_account: "Already have an account?",
+        no_account: "Don't have an account?",
+        register_here: "Register here",
+        login_here: "Login here"
         // 其他文本...
     },
     zh: {
@@ -36,7 +45,16 @@ const translations = {
         home: "首页",
         history: "历史记录",
         changelog: "更新日志",
-        contact: "联系我们"
+        contact: "联系我们",
+        login_title: "登录",
+        register_title: "注册",
+        username: "用户名",
+        password: "密码",
+        email: "电子邮箱",
+        have_account: "已有账号？",
+        no_account: "没有账号？",
+        register_here: "立即注册",
+        login_here: "立即登录"
         // 其他文本...
     }
 };
@@ -52,13 +70,16 @@ export function setLanguage(lang) {
     }
 }
 
-import {latestResults, renderResults} from './app.js'
+// import {latestResults, renderResults} from './app.js'
 
 // 动态内容刷新函数
 function refreshDynamicContent() {
-    if (latestResults.length > 0) {
-        renderResults(latestResults); // 使用最新数据重新渲染
-    }
+    // if (latestResults.length > 0) {
+    //     renderResults(latestResults); // 使用最新数据重新渲染
+    // }
+    // 改为使用事件机制
+    const event = new CustomEvent('languageChanged');
+    document.dispatchEvent(event);
 }
 
 // export function t(key) {

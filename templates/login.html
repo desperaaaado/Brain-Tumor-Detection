@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icons/favicon.png') }}">
+
+</head>
+<body>
+<div class="theme-switch">
+    <button id="themeToggle">
+        <img class="sun" src="{{ url_for('static', filename='images/icons/sun.svg') }}" alt="Sun Icon">
+        <img class="moon" src="{{ url_for('static', filename='images/icons/moon1.png') }}" alt="Moon Icon">
+    </button>
+</div>
+
+<div class="language-switch">
+    <div class="language-selector">
+        <span class="current-language"
+              data-flag-zh="{{ url_for('static', filename='images/icons/cn-flag.png') }}"
+              data-flag-en="{{ url_for('static', filename='images/icons/us-flag1.png') }}">
+            <img class="flag-icon" src="{{ url_for('static', filename='images/icons/cn-flag.png') }}" alt="中文">
+            中文
+        </span>
+        <div class="language-dropdown">
+            <div class="language-option" data-lang="zh">
+                <img src="{{ url_for('static', filename='images/icons/cn-flag.png') }}" alt="中文">
+                中文
+            </div>
+            <div class="language-option" data-lang="en">
+                <img src="{{ url_for('static', filename='images/icons/us-flag1.png') }}" alt="English">
+                English
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="auth-container">
+    {#    <h1>Login</h1>#}
+    <h1 data-i18n="login_title">Login</h1>
+    {% if error %}
+        <div class="alert error">{{ error }}</div>
+    {% endif %}
+    <form method="POST" action="{{ url_for('login') }}">
+        <div class="form-group">
+            {#            <label>Username</label>#}
+            <label data-i18n="username">Username</label>
+            <input type="text" name="username" required>
+        </div>
+        <div class="form-group">
+            {#            <label>Password</label>#}
+            <label data-i18n="password">Password</label>
+            <input type="password" name="password" required>
+        </div>
+        <button type="submit" data-i18n="login_title">Login</button>
+    </form>
+    <p>
+        <span data-i18n="no_account"></span>
+        <a href="{{ url_for('register') }}" data-i18n="register_here"></a>
+    </p>
+</div>
+
+
+<script type="module" src="{{ url_for('static', filename='js/theme.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/language.js') }}"></script>
+</body>
+</html>
