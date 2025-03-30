@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for
+from flask_mail import Mail, Message
 from werkzeug.utils import secure_filename
 from ultralytics import YOLO
 from datetime import datetime
@@ -7,6 +8,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import secrets
+import random
+import string
+from collections import defaultdict
+import time
+
+verification_codes = defaultdict(dict)
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -14,6 +21,14 @@ app.config['SECRET_KEY'] = secrets.token_hex(16)
 # app.config['SECRET_KEY'] = 'fixed-secret-key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:12345678@localhost/brain-tumor-detection-database'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# 邮件配置
+app.config['MAIL_SERVER'] = 'smtp.qq.com'  # QQ邮箱SMTP服务器
+app.config['MAIL_PORT'] = 465  # SSL端口
+app.config['MAIL_USE_SSL'] = True  # 启用SSL
+app.config['MAIL_USERNAME'] = '1226875104@qq.com'  # QQ邮箱
+app.config['MAIL_PASSWORD'] = 'spwtzidnpgxvgcfh'  # 邮箱授权码（非登录密码）
+mail = Mail(app)
 
 # 初始化扩展
 db = SQLAlchemy(app)
@@ -49,7 +64,6 @@ ALLOWED_EXTENSIONS = {'jpg', 'jpeg'}
 
 @login_manager.user_loader
 def load_user(user_id):
-    # return User.query.get(int(user_id))
     return db.session.get(User, int(user_id))
 
 
@@ -66,35 +80,79 @@ def login():
 
         if user and bcrypt.check_password_hash(user.password_hash, password):
             login_user(user)
-            # return redirect(url_for('index'))
             next_page = request.args.get('next')
             if next_page:
                 next_page = next_page.split('#')[0]
             return redirect(next_page or url_for('index'))
 
-        return render_template('login.html', error='Invalid credentials')
+        return render_template('login.html', error_key='wrong_username_or_password')
     return render_template('login.html')
 
 
 # 注册路由
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    current_lang = request.cookies.get('preferredLang', 'zh')
+
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
+        code = request.form.get('code')
 
+        # 验证用户名是否存在
         if User.query.filter_by(username=username).first():
-            return render_template('register.html', error='Username already exists')
+            return render_template('register.html', error_key='username_exists')
+        # 验证邮箱是否已注册
+        if User.query.filter_by(email=email).first():
+            return render_template('register.html', error_key='email_exists')
 
+        # 验证验证码
+        stored_data = verification_codes.get(email)
+        current_time = time.time()
+
+        # 检查验证码是否存在且未过期
+        if not stored_data or current_time > stored_data['expire']:
+            return render_template('register.html', error_key='code_expired')
+        if stored_data['code'] != code:
+            return render_template('register.html', error_key='code_invalid')
+
+        # 验证通过后删除验证码
+        del verification_codes[email]
+
+        # 创建用户
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         new_user = User(username=username, email=email, password_hash=hashed_password)
-        # db.create_all()
         db.session.add(new_user)
         db.session.commit()
 
         return redirect(url_for('login'))
     return render_template('register.html')
+
+
+@app.route('/send_verification_code', methods=['POST'])
+def send_verification_code():
+    email = request.json.get('email')
+
+    # 生成6位随机验证码
+    code = ''.join(random.choices(string.digits, k=6))
+
+    # 存储验证码（5分钟有效期）
+    verification_codes[email] = {
+        'code': code,
+        'expire': time.time() + 300  # 300秒=5分钟
+    }
+
+    # 发送邮件
+    msg = Message(
+        subject='Your Verification Code',
+        sender='1226875104@qq.com',
+        recipients=[email]
+    )
+    msg.body = f'Your verification code is: {code}'
+    mail.send(msg)
+
+    return jsonify({'status': 'success'})
 
 
 # 退出登录
@@ -113,7 +171,6 @@ def allowed_file(filename):
 @app.route('/')
 @login_required
 def index():
-    # return render_template('index.html')
     print(f"当前登录用户：{current_user.username}")
     return render_template('index.html', username=current_user.username)
 

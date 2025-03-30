@@ -38,21 +38,31 @@
 
 
 <div class="auth-container">
-    {#    <h1>Login</h1>#}
     <h1 data-i18n="login_title">Login</h1>
-    {% if error %}
-        <div class="alert error">{{ error }}</div>
-    {% endif %}
+    <div class="alert-container">
+        {% if error_key %}
+            <div class="alert error"
+                 data-i18n-error="{{ error_key }}"
+                 data-auto-dismiss="5000">  <!-- 5秒后自动消失 -->
+            </div>
+        {% endif %}
+    </div>
     <form method="POST" action="{{ url_for('login') }}">
         <div class="form-group">
-            {#            <label>Username</label>#}
             <label data-i18n="username">Username</label>
-            <input type="text" name="username" required>
+            <input type="text"
+                   name="username"
+                   data-i18n-placeholder="enter_username"
+                   placeholder="请输入用户名"
+                   required>
         </div>
         <div class="form-group">
-            {#            <label>Password</label>#}
             <label data-i18n="password">Password</label>
-            <input type="password" name="password" required>
+            <input type="password"
+                   name="password"
+                   data-i18n-placeholder="enter_password"
+                   placeholder="请输入密码"
+                   required>
         </div>
         <button type="submit" data-i18n="login_title">Login</button>
     </form>
@@ -65,5 +75,27 @@
 
 <script type="module" src="{{ url_for('static', filename='js/theme.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='js/language.js') }}"></script>
+<script>
+    function initErrorHandling() {
+        // 自动消失逻辑
+        document.querySelectorAll('[data-auto-dismiss]').forEach(alert => {
+            const delay = parseInt(alert.dataset.autoDismiss) || 3000;
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300); // 渐隐动画
+            }, delay);
+        });
+
+        // 清除已有错误（当用户开始输入时）
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', () => {
+                document.querySelector('.alert')?.remove();
+            });
+        });
+    }
+
+    // 在DOM加载后调用
+    document.addEventListener('DOMContentLoaded', initErrorHandling);
+</script>
 </body>
 </html>
