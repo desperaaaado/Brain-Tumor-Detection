@@ -26,8 +26,20 @@
         <li><a href="#history" data-i18n="history">History</a></li>
         <li><a href="#changelog" data-i18n="changelog">Changelog</a></li>
         <li><a href="#contact" data-i18n="contact">Contact</a></li>
-        <div id="auth-links"></div>
     </ul>
+    <!-- 用户信息卡片 -->
+    <div class="sidebar-footer">
+        <div class="user-card">
+            <!-- 将点击区域扩大到整个卡片 -->
+            <div class="user-info" style="position: relative;">
+                <span class="username">{{ current_user.username }}</span>
+                <div class="dropdown-content">
+                    <p class="user-email">{{ current_user.email }}</p>
+                    <a href="{{ url_for('logout') }}" class="logout-button" data-i18n="logout">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </nav>
 
 

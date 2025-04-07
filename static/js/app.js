@@ -200,6 +200,32 @@ function updateAuthUI() {
 }
 
 
+
+// 用户卡片交互逻辑
+document.addEventListener('DOMContentLoaded', () => {
+    // 点击用户卡片显示下拉菜单
+    const userCard = document.querySelector('.user-card');
+    const dropdown = document.querySelector('.dropdown-content');
+
+    if (userCard) {
+        userCard.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('show');
+        });
+
+        // 点击外部关闭
+        document.addEventListener('click', function() {
+            dropdown.classList.remove('show');
+        });
+
+        // 防止菜单内部点击关闭
+        dropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+});
+
+
 // ------------------
 // 文件上传功能
 // ------------------

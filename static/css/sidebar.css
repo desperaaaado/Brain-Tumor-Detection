@@ -22,6 +22,9 @@
     list-style: none;
     padding: 0;
     margin-top: 80px;
+
+    height: calc(100vh - 180px); /* 添加固定高度 */
+    overflow-y: auto;
 }
 
 .sidebar-menu li {
@@ -101,4 +104,91 @@
     .sidebar.active {
         left: 0;
     }
+}
+
+
+
+/* 用户信息卡片样式 */
+.sidebar-footer {
+    margin-top: auto; /* 使始终保持在底部 */
+    padding: 15px;
+    border-top: 1px solid var(--border-color);
+    background: var(--card-bg);
+}
+
+.user-card {
+    position: relative;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.user-card:hover {
+    background: #f5f5f5; /* 白天模式悬停色 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 添加阴影增强效果 */
+}
+
+[data-theme="dark"] .user-card:hover {
+    background: #333333; /* 夜间模式悬停色 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.username {
+    font-weight: 500;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+    z-index: 1000;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    visibility: hidden;
+}
+
+.dropdown-content.show {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.user-email {
+    font-size: 0.9em;
+    color: var(--text-color);
+    opacity: 0.8;
+    margin: 8px 0;
+    word-break: break-all;
+}
+
+.logout-button {
+    display: block;
+    width: 90%;
+    padding: 8px;
+    text-align: center;
+    background: var(--error-color);
+    color: white !important;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background 0.3s ease;
+}
+
+.logout-button:hover {
+    background: #c0392b;
+    text-decoration: none;
 }

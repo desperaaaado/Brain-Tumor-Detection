@@ -36,6 +36,7 @@ const translations = {
         resend_after: "Resend in {{seconds}} seconds",
         send_code_failed: "Failed to send verification code",
         send_failed: "Send failed",
+        logout: "Log out",
         errors: {
             username_exists: "Username already exists",
             email_exists: "Email already registered",
@@ -83,6 +84,7 @@ const translations = {
         resend_after: "{{seconds}}秒后重发",
         send_code_failed: "验证码发送失败，请重试",
         send_failed: "发送失败",
+        logout: "退出登录",
         errors: {
             username_exists: "用户名已存在",
             email_exists: "邮箱已注册",
