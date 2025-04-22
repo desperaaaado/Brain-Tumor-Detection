@@ -103,7 +103,7 @@ document.addEventListener('click', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
     // 侧边栏菜单点击处理
     document.querySelectorAll('.sidebar-menu a').forEach(link => {
-        link.addEventListener('click', function(e) {
+        link.addEventListener('click', function (e) {
             e.preventDefault();
             const target = this.getAttribute('href');
 
@@ -131,6 +131,11 @@ function handleRouting() {
     if (!hash || hash === '#login') {
         hash = '#home';  // 修正错误哈希
         history.replaceState(null, null, hash);
+    }
+
+    // 当切换到历史记录页面时加载数据
+    if (hash === '#history') {
+        loadHistory();
     }
 
 
@@ -178,29 +183,6 @@ window.addEventListener('load', handleRouting);
 window.addEventListener('hashchange', handleRouting);
 
 
-// 添加认证状态检查函数
-function isAuthenticated() {
-    // 这里需要与后端session/cookie配合
-    return document.cookie.includes('session='); // 根据实际认证方式调整
-}
-
-// 修改侧边栏显示登录状态
-function updateAuthUI() {
-    const authLinks = document.getElementById('auth-links');
-    if (isAuthenticated()) {
-        authLinks.innerHTML = `
-            <li><a href="#logout" data-i18n="logout">Logout</a></li>
-        `;
-    } else {
-        authLinks.innerHTML = `
-            <li><a href="#login" data-i18n="login">Login</a></li>
-            <li><a href="#register" data-i18n="register">Register</a></li>
-        `;
-    }
-}
-
-
-
 // 用户卡片交互逻辑
 document.addEventListener('DOMContentLoaded', () => {
     // 点击用户卡片显示下拉菜单
@@ -208,18 +190,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const dropdown = document.querySelector('.dropdown-content');
 
     if (userCard) {
-        userCard.addEventListener('click', function(e) {
+        userCard.addEventListener('click', function (e) {
             e.stopPropagation();
             dropdown.classList.toggle('show');
         });
 
         // 点击外部关闭
-        document.addEventListener('click', function() {
+        document.addEventListener('click', function () {
             dropdown.classList.remove('show');
         });
 
         // 防止菜单内部点击关闭
-        dropdown.addEventListener('click', function(e) {
+        dropdown.addEventListener('click', function (e) {
             e.stopPropagation();
         });
     }
@@ -277,8 +259,7 @@ async function handleFileSelect(e) {
 
     // Show loader
     loader.style.display = 'block';
-    // fileCounter.textContent = `Uploading ${files.length} files...`;
-    fileCounter.textContent = t('uploadingFiles', { count: files.length });
+    fileCounter.textContent = t('uploadingFiles', {count: files.length});
     resultsContainer.innerHTML = '';
 
     const formData = new FormData();
@@ -327,9 +308,9 @@ export function renderResults(results) {
                     <div class="card-content">
                         <div class="filename">${result.original_filename}</div>
                         <div class="status ${result.status}">
-                            ${result.status === 'success' 
-                                ? t('success') 
-                                : `${t('error')}: ${result.error}`}
+                            ${result.status === 'success'
+        ? t('success')
+        : `${t('error')}: ${result.error}`}
                         </div>
                     </div>
                 </div>
@@ -339,18 +320,15 @@ export function renderResults(results) {
 // Drag and drop handling
 document.addEventListener('dragover', e => {
     e.preventDefault();
-    // document.querySelector('.upload-label').style.borderColor = 'var(--primary-color)';
     document.querySelector('.upload-label').classList.add('dragover');
 });
 
 document.addEventListener('dragleave', () => {
-    // document.querySelector('.upload-label').style.borderColor = '#ccc';
     document.querySelector('.upload-label').classList.remove('dragover');
 });
 
 document.addEventListener('drop', e => {
     e.preventDefault();
-    // document.querySelector('.upload-label').style.borderColor = '#ccc';
     document.querySelector('.upload-label').classList.remove('dragover');
     if (e.dataTransfer.files) {
         fileInput.files = e.dataTransfer.files;
@@ -390,3 +368,349 @@ document.addEventListener('click', function (e) {
     }
 });
 
+
+// 全局分页参数
+let currentHistoryPage = 1;
+let currentCategoryFilter = '';
+
+// 初始化历史记录功能
+function initHistory() {
+    // 绑定事件
+    document.getElementById('applyFilter').addEventListener('click', loadHistory);
+    document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
+    document.getElementById('nextPage').addEventListener('click', () => changePage(1));
+
+    // 初始化加载
+    loadHistory();
+}
+
+// 加载历史数据
+async function loadHistory() {
+    try {
+        currentCategoryFilter = document.getElementById('categoryFilter').value;
+        const response = await fetch(`/api/history?page=${currentHistoryPage}&category=${currentCategoryFilter}`);
+        const data = await response.json();
+
+        renderHistory(data);
+        // updatePagination(data.has_prev, data.has_next);
+        updatePagination(
+            data.has_prev,
+            data.has_next,
+            data.current_page,
+            data.total_pages
+        );
+    } catch (error) {
+        console.error('加载历史记录失败:', error);
+    }
+}
+
+// 渲染历史记录
+function renderHistory(data) {
+    const container = document.getElementById('historyList');
+    const currentLang = localStorage.getItem('preferredLang') || 'zh'; // 通过localStorage获取
+
+    container.innerHTML = data.items.length > 0
+        ? data.items.map(item => `
+            <div class="history-item" data-id="${item.id}">
+                <div class="image-pair">
+                    <div class="thumbnail-container">
+                        <img src="${item.original_image}" 
+                            alt="原图" 
+                            class="history-thumbnail"
+                            data-enlargeable
+                            data-original="${item.original_image}">
+                        <span class="image-label" data-i18n="original_image">${t('original_image')}</span>
+                    </div>
+                    <div class="thumbnail-container">
+                        <img src="${item.result_image}" 
+                            alt="结果图" 
+                            class="history-thumbnail"
+                            data-enlargeable
+                            data-original="${item.result_image}">
+                        <span class="image-label" data-i18n="result_image">${t('result_image')}</span>
+                    </div>
+                </div>
+                
+                <div class="meta">
+                    <!-- 第一行：检测时间 + 类别 -->
+                    <div class="row">
+                        <div class="info-item">
+                            <span class="label" data-i18n="detection_time">${t('detection_time')}:</span>
+                            <span>${new Date(item.created_at).toLocaleString()}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label" data-i18n="class">${t('class')}:</span>
+                            ${item.detection_data.map(d => `
+                                <span class="class-badge">${d.class_name}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <!-- 第二行：置信度阈值 + 交并比阈值 -->
+                    <div class="row">
+                        <div class="info-item">
+                            <span class="label" data-i18n="conf_threshold">${t('conf_threshold')}:</span>
+                            <span>${item.conf_threshold.toFixed(2)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label" data-i18n="iou_threshold">${t('iou_threshold')}:</span>
+                            <span>${item.iou_threshold.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <!-- 第三行：置信度 -->
+                    <div class="row">
+                        <div class="info-item full-width">
+                            <span class="label" data-i18n="confidence">${t('confidence')}:</span>
+                            ${item.detection_data.map(d => `
+                                <span class="confidence-value">${d.conf.toFixed(4)}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <!-- 第四行：坐标范围 -->
+                    <div class="row">
+                        <div class="info-item full-width">
+                            <span class="label" data-i18n="coordinates">${t('coordinates')}:</span>
+                            ${item.detection_data.map(d => `
+                                <div class="coordinate-box">[${d.xyxy.map(n => n.toFixed(2)).join(', ')}]</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="action-buttons">                   
+                    <button class="export-btn" data-id="${item.id}" data-lang="${currentLang}" data-i18n="export_single">${t('export_single')}</button>
+                </div>
+                <button class="delete-btn" data-id="${item.id}">
+                    <svg class="delete-icon" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                    </svg>
+                </button>
+            </div>
+        `).join('')
+        : `<div class="no-data" data-i18n="no_history">暂无历史记录</div>`;
+
+
+    // 添加导出事件监听
+    document.getElementById('historyList').addEventListener('click', (e) => {
+        if (e.target.classList.contains('export-btn')) {
+            const recordId = e.target.dataset.id;
+            // window.location.href = `/api/history/${recordId}/export`;
+            const lang = localStorage.getItem('preferredLang') || 'zh';
+            window.location.href = `/api/history/${recordId}/export?lang=${lang}`;
+        }
+    });
+
+    // 添加图片点击事件监听
+    document.querySelectorAll('.history-thumbnail').forEach(img => {
+        img.addEventListener('click', function (e) {
+            e.stopPropagation();
+            createImageModal(this.src, this.alt);
+        });
+    });
+}
+
+// 绑定删除事件
+// document.getElementById('historyList').addEventListener('click', async (e) => {
+//     if (e.target.classList.contains('delete-btn')) {
+//         const itemId = e.target.dataset.id;
+//         if (confirm(t('delete_confirm'))) {
+//             try {
+//                 const response = await fetch(`/api/history/${itemId}`, {
+//                     method: 'DELETE'
+//                 });
+//                 if (response.ok) {
+//                     loadHistory();
+//                 }
+//             } catch (error) {
+//                 console.error('删除失败:', error);
+//             }
+//         }
+//     }
+// });
+
+// 创建确认弹窗函数
+function showDeleteConfirm(itemId) {
+    const modal = document.createElement('div');
+    modal.className = 'confirm-modal';
+
+    modal.innerHTML = `
+        <div class="confirm-dialog">
+            <div class="confirm-content">
+                <h3>${t('delete_confirm_title')}</h3>
+                <p>${t('delete_confirm_text')}</p>
+                <div class="confirm-buttons">
+                    <button class="confirm-cancel">${t('cancel')}</button>
+                    <button class="confirm-ok">${t('confirm')}</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 点击取消
+    modal.querySelector('.confirm-cancel').addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+
+    // 点击确认
+    modal.querySelector('.confirm-ok').addEventListener('click', async () => {
+        try {
+            const response = await fetch(`/api/history/${itemId}`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                loadHistory();
+            }
+        } catch (error) {
+            console.error('删除失败:', error);
+        }
+        document.body.removeChild(modal);
+    });
+
+    // 点击背景关闭
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
+    });
+
+    // ESC键关闭
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            document.body.removeChild(modal);
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
+
+    document.body.appendChild(modal);
+}
+
+document.getElementById('historyList').addEventListener('click', (e) => {
+    const deleteBtn = e.target.closest('.delete-btn');
+    if (deleteBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const itemId = deleteBtn.dataset.id;
+        showDeleteConfirm(itemId);
+    }
+});
+
+// 创建图片模态框
+function createImageModal(src, alt) {
+    const modal = document.createElement('div');
+    modal.className = 'image-modal';
+
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="close-button"></div>
+            <img src="${src}" alt="${alt}" class="modal-image">
+        </div>
+    `;
+
+    // 关闭处理
+    const closeModal = () => document.body.removeChild(modal);
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    modal.querySelector('.close-button').addEventListener('click', closeModal);
+
+    // ESC键关闭
+    document.addEventListener('keydown', function escHandler(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+            document.removeEventListener('keydown', escHandler);
+        }
+    });
+
+    document.body.appendChild(modal);
+}
+
+
+// 分页操作
+function changePage(delta) {
+    currentHistoryPage += delta;
+    loadHistory();
+}
+
+
+// 更新分页状态
+function updatePagination(hasPrev, hasNext, currentPage, totalPages) {
+    const container = document.querySelector('.pagination');
+    container.innerHTML = '';
+
+    // 生成页码按钮
+    const pages = generatePageNumbers(currentPage, totalPages);
+
+    // 添加上一页按钮
+    container.appendChild(createPageButton('«', currentPage - 1, !hasPrev));
+
+    // 添加页码按钮
+    pages.forEach(page => {
+        if (page === '...') {
+            container.appendChild(createEllipsis());
+        } else {
+            container.appendChild(createPageButton(
+                page,
+                page,
+                page === currentPage
+            ));
+        }
+    });
+
+    // 添加下一页按钮
+    container.appendChild(createPageButton('»', currentPage + 1, !hasNext));
+}
+
+// 生成智能页码数组（最多显示7个按钮）
+function generatePageNumbers(current, total) {
+    const range = 2; // 当前页两侧显示的页码数
+    const pages = [];
+
+    if (total <= 7) {
+        return Array.from({length: total}, (_, i) => i + 1);
+    }
+
+    // 开头页码
+    pages.push(1, 2);
+    if (current > range + 3) pages.push('...');
+
+    // 中间页码
+    const start = Math.max(3, current - range);
+    const end = Math.min(total - 2, current + range);
+    for (let i = start; i <= end; i++) pages.push(i);
+
+    // 结尾页码
+    if (current < total - range - 2) pages.push('...');
+    pages.push(total - 1, total);
+
+    return [...new Set(pages)].sort((a, b) => a - b);
+}
+
+// 创建页码按钮
+function createPageButton(text, page, disabled = false) {
+    const btn = document.createElement('button');
+    btn.className = `pagination-btn ${disabled ? 'disabled' : ''}`;
+    btn.textContent = text;
+    btn.dataset.page = page;
+
+    if (!disabled && text !== '...') {
+        btn.addEventListener('click', () => {
+            currentHistoryPage = page;
+            loadHistory();
+        });
+    }
+
+    return btn;
+}
+
+// 创建省略号元素
+function createEllipsis() {
+    const span = document.createElement('span');
+    span.className = 'pagination-ellipsis';
+    span.textContent = '...';
+    return span;
+}
+
+// 初始化时调用
+document.addEventListener('DOMContentLoaded', initHistory);

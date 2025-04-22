@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for
+from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, Response
 from flask_mail import Mail, Message
 from werkzeug.utils import secure_filename
 from ultralytics import YOLO
@@ -12,6 +12,8 @@ import random
 import string
 from collections import defaultdict
 import time
+import csv
+from io import StringIO
 
 verification_codes = defaultdict(dict)
 
@@ -46,6 +48,22 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# 数据库表 检测历史
+class DetectionHistory(db.Model):
+    __tablename__ = 'detection_history'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    original_image = db.Column(db.String(255), nullable=False)
+    result_image = db.Column(db.String(255), nullable=False)
+    detection_data = db.Column(db.JSON, nullable=False)  # 存储检测结果数据
+    conf_threshold = db.Column(db.Float, nullable=False)
+    iou_threshold = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref='histories')
 
 
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -251,19 +269,41 @@ def predict():
 
             file_info["result_url"] = f"/static/results/{result_filename}"
 
+            # 保存检测结果数据
+            detection_data = []
+            for box in boxes:
+                detection_data.append({
+                    'xyxy': box.xyxy.tolist()[0],
+                    'conf': box.conf.item(),
+                    'cls': box.cls.item(),
+                    'class_name': model.names[int(box.cls)]
+                })
+
+            # 创建历史记录
+            new_history = DetectionHistory(
+                user_id=current_user.id,
+                original_image=upload_path,
+                result_image=result_path,
+                detection_data=detection_data,
+                conf_threshold=conf,
+                iou_threshold=iou
+            )
+            db.session.add(new_history)
+
         except Exception as e:
             file_info.update({
                 "status": "error",
                 "error": str(e)
             })
 
-        finally:
-            # Cleanup original file
-            if os.path.exists(upload_path):
-                os.remove(upload_path)
+        # finally:
+        #     # Cleanup original file
+        #     if os.path.exists(upload_path):
+        #         os.remove(upload_path)
 
         results.append(file_info)
 
+    db.session.commit()
     return jsonify({"results": results})
 
 
@@ -271,6 +311,127 @@ def predict():
 @login_required
 def serve_result(filename):
     return send_from_directory(app.config['RESULT_FOLDER'], filename)
+
+
+@app.route('/uploads/<filename>')
+@login_required
+def serve_upload(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
+@app.route('/api/history')
+@login_required
+def api_history():
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    category = request.args.get('category', '')
+
+    # 构建查询
+    query = DetectionHistory.query.filter_by(user_id=current_user.id)
+    if category:
+        # MySQL JSON查询语法
+        query = query.filter(
+            db.text(f"JSON_CONTAINS(detection_data, :value, '$')")
+        ).params(value=f'{{"cls": {int(category)}}}')
+
+    # 分页查询
+    pagination = query.order_by(DetectionHistory.created_at.desc()).paginate(page=page, per_page=per_page)
+
+    # 构造JSON响应
+    return jsonify({
+        'items': [{
+            'id': item.id,
+            'original_image': item.original_image,
+            'result_image': item.result_image,
+            'detection_data': item.detection_data,
+            'conf_threshold': item.conf_threshold,
+            'iou_threshold': item.iou_threshold,
+            'created_at': item.created_at.isoformat(),
+        } for item in pagination.items],
+        'has_prev': pagination.has_prev,
+        'has_next': pagination.has_next,
+        'total_pages': pagination.pages,
+        'current_page': pagination.page
+    })
+
+
+# 删除历史记录
+@app.route('/api/history/<int:history_id>', methods=['DELETE'])
+@login_required
+def delete_history(history_id):
+    history = DetectionHistory.query.get_or_404(history_id)
+    if history.user_id != current_user.id:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    # 删除文件（按需添加）
+    # if os.path.exists(history.original_image):
+    #     os.remove(history.original_image)
+    # if os.path.exists(history.result_image):
+    #     os.remove(history.result_image)
+
+    db.session.delete(history)
+    db.session.commit()
+    return jsonify({"status": "success"})
+
+
+# 导出历史记录的 CSV 文件
+@app.route('/api/history/<int:history_id>/export')
+@login_required
+def export_single_history(history_id):
+    # 获取语言参数
+    lang = request.args.get('lang', 'zh')
+
+    history = DetectionHistory.query.get_or_404(history_id)
+    if history.user_id != current_user.id:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    si = StringIO()
+    si.write('\ufeff')
+    cw = csv.writer(si)
+
+    # 获取表头翻译
+    headers = {
+        'en': [
+            'Original image', 'Result image', 'Confidence threshold',
+            'IOU threshold', 'Class', 'Confidence', 'Coordinates', 'Detection Time'
+        ],
+        'zh': [
+            '原始图像', '结果图像', '置信度阈值',
+            '交并比阈值', '类别', '置信度', '坐标范围', '检测时间'
+        ]
+    }.get(lang, 'zh')  # 默认中文
+
+    # 写入动态表头
+    cw.writerow(headers)
+
+    # 公共数据
+    base_data = [
+        os.path.basename(history.original_image),
+        os.path.basename(history.result_image),
+        f"{history.conf_threshold:.2f}",
+        f"{history.iou_threshold:.2f}",
+        history.created_at.strftime('%Y-%m-%d %H:%M:%S')
+    ]
+
+    # 填充检测数据
+    for detection in history.detection_data:
+        cw.writerow([
+            base_data[0],  # Original image
+            base_data[1],  # Result image
+            base_data[2],  # conf threshold
+            base_data[3],  # iou threshold
+            detection['class_name'],
+            f"{detection['conf']:.4f}",
+            f"{detection['xyxy']}",
+            base_data[4]  # Detection Time
+        ])
+
+    output = si.getvalue().encode('utf-8-sig')
+    return Response(
+        output,
+        mimetype="text/csv; charset=utf-8-sig",
+        headers={"Content-disposition": f"attachment; filename=detection_{history_id}_{lang}.csv"}
+    )
 
 
 if __name__ == '__main__':

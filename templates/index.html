@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="flask-base-url" content="{{ url_for('index') }}">
-    <!--    <title>Brain Tumor Detection</title>-->
     <title data-i18n="title">Brain Tumor Detection</title>
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icons/favicon.png') }}">
@@ -76,7 +75,6 @@
 
     <div id="home" class="page">
         <div class="container">
-            <!--    <h1>Brain Tumor Detection</h1>-->
             <h1 data-i18n="title">Brain Tumor Detection</h1>
 
             <div class="upload-section">
@@ -104,14 +102,14 @@
 
                 <div class="params-control">
                     <div class="param-item">
-                        <label data-i18n="confidence">Confidence Threshold:</label>
+                        <label data-i18n="conf_threshold">Confidence Threshold:</label>
                         <div class="slider-container">
                             <input type="range" id="confThreshold" min="0" max="1" step="0.01" value="0.25">
                             <span class="value-display" id="confValue">0.25</span>
                         </div>
                     </div>
                     <div class="param-item">
-                        <label data-i18n="iou">IOU Threshold:</label>
+                        <label data-i18n="iou_threshold">IOU Threshold:</label>
                         <div class="slider-container">
                             <input type="range" id="iouThreshold" min="0" max="1" step="0.01" value="0.70">
                             <span class="value-display" id="iouValue">0.70</span>
@@ -129,8 +127,30 @@
     <div id="history" class="page" style="display: none;">
         <div class="container">
             <h2 data-i18n="history">History</h2>
-            <!-- 历史记录内容 -->
-            <div id="history-results"></div>
+{#            <!-- 历史记录内容 -->#}
+
+            <!-- 筛选和操作栏 -->
+            <div class="history-controls">
+                <select id="categoryFilter" class="form-control" data-i18n-placeholder="filter_category">
+                    <option value="" data-i18n="all_categories">All Categories</option>
+                    <option value="0" data-i18n="class_0">No tumor</option>
+                    <option value="1" data-i18n="class_1">Glioma</option>
+                    <option value="2" data-i18n="class_2">Meningioma</option>
+                    <option value="3" data-i18n="class_3">Pituitary</option>
+                    <option value="4" data-i18n="class_4">Space-occupying lesion</option>
+                </select>
+                <button id="applyFilter" class="filter-btn" data-i18n="apply_filter">Apply Filter</button>
+            </div>
+
+            <!-- 历史记录列表容器 -->
+            <div class="history-list" id="historyList">
+                <!-- 动态内容将通过JavaScript填充 -->
+            </div>
+
+            <!-- 分页控件 -->
+            <div class="pagination">
+                <!-- 由JavaScript动态生成 -->
+            </div>
         </div>
     </div>
 
@@ -153,7 +173,6 @@
 
 
 <!-- 加载JavaScript -->
-<!--<script src="{{ url_for('static', filename='js/app.js') }}"></script>-->
 <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
 
 </body>
