@@ -375,10 +375,25 @@ let currentCategoryFilter = '';
 
 // 初始化历史记录功能
 function initHistory() {
+    // 获取元素
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+
     // 绑定事件
-    document.getElementById('applyFilter').addEventListener('click', loadHistory);
-    document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
-    document.getElementById('nextPage').addEventListener('click', () => changePage(1));
+    document.getElementById('applyFilter').addEventListener('click', () => {
+        currentHistoryPage = 1; // 重置为第一页
+        loadHistory();
+    });
+
+    // 绑定上一页按钮事件（确保存在）
+    if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', () => changePage(-1));
+    }
+
+    // 绑定下一页按钮事件（确保存在）
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', () => changePage(1));
+    }
 
     // 初始化加载
     loadHistory();
