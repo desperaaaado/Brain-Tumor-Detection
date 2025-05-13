@@ -3,7 +3,7 @@
 /brain-tumor.yaml
 /bus.jpg
 /datasets
-/model
+/model/train6_best.pt
 /runs
 /uploads
 /yolo11m.pt

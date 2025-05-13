@@ -71,7 +71,8 @@ app.config['RESULT_FOLDER'] = 'static/results'
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB limit
 
 # Load model
-model = YOLO('./model/train6_best.pt')
+# model = YOLO('./model/train6_best.pt')
+model = YOLO('./model/best.pt')
 
 # Ensure directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
