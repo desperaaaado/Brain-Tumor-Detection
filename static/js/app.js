@@ -501,7 +501,7 @@ function renderHistory(data) {
                 </button>
             </div>
         `).join('')
-        : `<div class="no-data" data-i18n="no_history">暂无历史记录</div>`;
+        : `<div class="no-data" data-i18n="no_history">${t('no_history')}</div>`;
 
 
     // 添加导出事件监听
