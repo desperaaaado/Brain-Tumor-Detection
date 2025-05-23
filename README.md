@@ -31,7 +31,7 @@ This is a front-end system for brain tumor detection based on YOLOv11 model.
 ### Demo Video
 
 <video controls>
-    <source src='static/images/demo video.mp4' type="video/mp4">
+    <source src='static/images/demo_video.mp4' type="video/mp4">
 </video>
 
 ## Model Performance
